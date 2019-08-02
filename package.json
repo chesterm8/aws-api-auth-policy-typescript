@@ -1,6 +1,6 @@
 {
   "name": "aws-api-auth-policy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Typescript implementation of AWS API Gateway Lambda Authorizer policy creator",
   "main": "dist/auth-policy",
   "typings": "dist/auth-policy",
