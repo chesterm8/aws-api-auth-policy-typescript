@@ -4,13 +4,13 @@ Typescript implementation of AWS API Gateway Lambda Authorizer policy creator
 ## Install
 
 ```sh
-$ npm install XXXXXX
+$ npm install aws-api-auth-policy
 ```
 
 ## Input
 
 ```ts
-import {ApiOptions, AuthPolicy} from "XXXX";
+import {ApiOptions, AuthPolicy} from "aws-api-auth-policy";
 
 const userId = "12345";
 const awsAccountId = "6789";
