@@ -16,7 +16,7 @@ const userId = "12345";
 const awsAccountId = "6789";
 
 const apiOptions: ApiOptions = {};
-apiOptions.region = "region"; //eg us-east-1
+apiOptions.region = "us-east-1";
 apiOptions.restApiId = "restApiId";
 apiOptions.stage = "stage";
 
@@ -40,7 +40,7 @@ console.log(policyJson);
         "Action": "execute-api:Invoke",
         "Effect": "Allow",
         "Resource": [
-          "arn:aws:execute-api:region:6789:restApiId/stage/*/*"
+          "arn:aws:execute-api:us-east-1:6789:restApiId/stage/*/*"
         ]
       }
     ]

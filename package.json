@@ -1,0 +1,36 @@
+{
+  "name": "aws-api-auth-policy",
+  "version": "1.0.0",
+  "description": "Typescript implementation of AWS API Gateway Lambda Authorizer policy creator",
+  "main": "dist/auth-policy",
+  "typings": "dist/auth-policy",
+  "scripts": {
+    "prepublishOnly": "npm run compile",
+    "compile": "npm run clean && tsc -p .",
+    "watch": "tsc -w -p .",
+    "clean": "rm -rf dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chesterm8/aws-api-auth-policy.git"
+  },
+  "keywords": [
+    "aws",
+    "api",
+    "typescript"
+  ],
+  "devDependencies": {
+    "@types/node": "12.6.9",
+    "typescript": "3.5.3"
+  },
+  "files": [
+    "dist/auth-policy.js",
+    "dist/auth-policy.d.ts"
+  ],
+  "author": "Stephen Bellchester <chesterm8.dev@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chesterm8/aws-api-auth-policy/issues"
+  },
+  "homepage": "https://github.com/chesterm8/aws-api-auth-policy#readme"
+}
