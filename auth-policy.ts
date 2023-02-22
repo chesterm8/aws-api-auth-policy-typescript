@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * AuthPolicy receives a set of allowed and denied methods and generates a valid
  * AWS policy for the API Gateway authorizer. The constructor receives the calling
@@ -23,15 +24,13 @@
  */
 
 export class AuthPolicy {
-
   /**
    * A set of existing HTTP verbs supported by API Gateway. This property is here
    * only to avoid spelling mistakes in the policy.
    *
    * @property HttpVerb
-   * @type {Object}
    */
-  public HttpVerb = {
+  static HttpVerb = {
     GET: "GET",
     POST: "POST",
     PUT: "PUT",
@@ -39,7 +38,7 @@ export class AuthPolicy {
     HEAD: "HEAD",
     DELETE: "DELETE",
     OPTIONS: "OPTIONS",
-    ALL: "*"
+    ALL: "*",
   };
 
   private readonly awsAccountId: string;
@@ -52,7 +51,11 @@ export class AuthPolicy {
   private readonly region: string;
   private readonly stage: string;
 
-  constructor(principal: string, awsAccountId: string, apiOptions?: ApiOptions) {
+  constructor(
+    principal: string,
+    awsAccountId: string,
+    apiOptions?: ApiOptions
+  ) {
     /**
      * The AWS account id the policy will be generated for. This is used to create
      * the method ARNs.
@@ -87,7 +90,7 @@ export class AuthPolicy {
      * @type {RegExp}
      * @default '^\/[/.a-zA-Z0-9-\*]+$'
      */
-    this.pathRegex = new RegExp("^[/.a-zA-Z0-9-\*]+$");
+    this.pathRegex = new RegExp("^[/.a-zA-Z0-9-*]+$");
 
     // these are the internal lists of allowed and denied methods. These are lists
     // of objects and each object has 2 properties: A resource ARN and a nullable
@@ -121,7 +124,7 @@ export class AuthPolicy {
    */
   public allowAllMethods = () => {
     this.addMethod.call(this, "allow", "*", "*", null);
-  }
+  };
 
   /**
    * Adds a deny "*" statement to the policy.
@@ -130,7 +133,7 @@ export class AuthPolicy {
    */
   public denyAllMethods = () => {
     this.addMethod.call(this, "deny", "*", "*", null);
-  }
+  };
 
   /**
    * Adds an API Gateway method (Http verb + Resource path) to the list of allowed
@@ -142,9 +145,9 @@ export class AuthPolicy {
    * @param resource {string} The resource path. For example "/pets"
    * @return {void}
    */
-  public allowMethod = (verb: string, resource: string) => {
+  public allowMethod = (verb: TAllowedVerbs, resource: string): void => {
     this.addMethod.call(this, "allow", verb, resource, null);
-  }
+  };
 
   /**
    * Adds an API Gateway method (Http verb + Resource path) to the list of denied
@@ -156,9 +159,9 @@ export class AuthPolicy {
    * @param resource {string} The resource path. For example "/pets"
    * @return {void}
    */
-  public denyMethod = (verb: string, resource: string) => {
+  public denyMethod = (verb: TAllowedVerbs, resource: string): void => {
     this.addMethod.call(this, "deny", verb, resource, null);
-  }
+  };
 
   /**
    * Adds an API Gateway method (Http verb + Resource path) to the list of allowed
@@ -172,9 +175,13 @@ export class AuthPolicy {
    * @param conditions {Object} The conditions object in the format specified by the AWS docs
    * @return {void}
    */
-  public allowMethodWithConditions = (verb: string, resource: string, conditions: any) => {
+  public allowMethodWithConditions = (
+    verb: TAllowedVerbs,
+    resource: string,
+    conditions: any
+  ): void => {
     this.addMethod.call(this, "allow", verb, resource, conditions);
-  }
+  };
 
   /**
    * Adds an API Gateway method (Http verb + Resource path) to the list of denied
@@ -188,9 +195,13 @@ export class AuthPolicy {
    * @param conditions {Object} The conditions object in the format specified by the AWS docs
    * @return {void}
    */
-  public denyMethodWithConditions = (verb: string, resource: string, conditions: any) => {
+  public denyMethodWithConditions = (
+    verb: TAllowedVerbs,
+    resource: string,
+    conditions: any
+  ): void => {
     this.addMethod.call(this, "deny", verb, resource, conditions);
-  }
+  };
 
   /**
    * Generates the policy document based on the internal lists of allowed and denied
@@ -201,9 +212,11 @@ export class AuthPolicy {
    * @method build
    * @return {Object} The policy object that can be serialized to JSON.
    */
-  public build = () => {
-    if ((!this.allowMethods || this.allowMethods.length === 0) &&
-      (!this.denyMethods || this.denyMethods.length === 0)) {
+  public build = (): object => {
+    if (
+      (!this.allowMethods || this.allowMethods.length === 0) &&
+      (!this.denyMethods || this.denyMethods.length === 0)
+    ) {
       throw new Error("No statements defined for the policy");
     }
 
@@ -213,13 +226,17 @@ export class AuthPolicy {
     doc.Version = this.version;
     doc.Statement = [];
 
-    doc.Statement = doc.Statement.concat(this.getStatementsForEffect.call(this, "Allow", this.allowMethods));
-    doc.Statement = doc.Statement.concat(this.getStatementsForEffect.call(this, "Deny", this.denyMethods));
+    doc.Statement = doc.Statement.concat(
+      this.getStatementsForEffect.call(this, "Allow", this.allowMethods)
+    );
+    doc.Statement = doc.Statement.concat(
+      this.getStatementsForEffect.call(this, "Deny", this.denyMethods)
+    );
 
     policy.policyDocument = doc;
 
     return policy;
-  }
+  };
 
   /**
    * Adds a method to the internal lists of allowed or denied methods. Each object in
@@ -234,39 +251,57 @@ export class AuthPolicy {
    * @param conditions {Object} The conditions object in the format specified by the AWS docs.
    * @return {void}
    */
-  private addMethod = (effect: string, verb: string, resource: string, conditions: any) => {
-    if (verb !== "*" && !this.HttpVerb.hasOwnProperty(verb)) {
-      throw new Error("Invalid HTTP verb " + verb + ". Allowed verbs in AuthPolicy.HttpVerb");
+  private addMethod = (
+    effect: string,
+    verb: TAllowedVerbs,
+    resource: string,
+    conditions: any
+  ): void => {
+    if (verb !== "*" && !AuthPolicy.HttpVerb[verb]) {
+      throw new Error(
+        "Invalid HTTP verb " + verb + ". Allowed verbs in AuthPolicy.HttpVerb"
+      );
     }
 
     if (!this.pathRegex.test(resource)) {
-      throw new Error("Invalid resource path: " + resource + ". Path should match " + this.pathRegex);
+      throw new Error(
+        "Invalid resource path: " +
+          resource +
+          ". Path should match " +
+          this.pathRegex
+      );
     }
 
     let cleanedResource = resource;
     if (resource.substring(0, 1) === "/") {
       cleanedResource = resource.substring(1, resource.length);
     }
-    const resourceArn = "arn:aws:execute-api:" +
-      this.region + ":" +
-      this.awsAccountId + ":" +
-      this.restApiId + "/" +
-      this.stage + "/" +
-      verb + "/" +
+    const resourceArn =
+      "arn:aws:execute-api:" +
+      this.region +
+      ":" +
+      this.awsAccountId +
+      ":" +
+      this.restApiId +
+      "/" +
+      this.stage +
+      "/" +
+      verb +
+      "/" +
       cleanedResource;
 
     if (effect.toLowerCase() === "allow") {
       this.allowMethods.push({
         resourceArn,
-        conditions
+        conditions,
       });
     } else if (effect.toLowerCase() === "deny") {
       this.denyMethods.push({
         resourceArn,
-        conditions
+        conditions,
       });
     }
-  }
+  };
 
   /**
    * Returns an empty statement object prepopulated with the correct action and the
@@ -277,15 +312,18 @@ export class AuthPolicy {
    * @return {Object} An empty statement object with the Action, Effect, and Resource
    *                  properties prepopulated.
    */
-  private getEmptyStatement = (effect: string) => {
-    effect = effect.substring(0, 1).toUpperCase() + effect.substring(1, effect.length).toLowerCase();
-    const statement: any = {};
-    statement.Action = "execute-api:Invoke";
-    statement.Effect = effect;
-    statement.Resource = [];
+  private getEmptyStatement = (effect: string): IStatement => {
+    effect =
+      effect.substring(0, 1).toUpperCase() +
+      effect.substring(1, effect.length).toLowerCase();
+    const statement: IStatement = {
+      Action: "execute-api:Invoke",
+      Effect: effect,
+      Resource: [],
+    };
 
     return statement;
-  }
+  };
 
   /**
    * This function loops over an array of objects containing a resourceArn and
@@ -297,14 +335,20 @@ export class AuthPolicy {
    *                and the conditions for the policy
    * @return {Array} an array of formatted statements for the policy.
    */
-  private getStatementsForEffect = (effect: string, methods: ApiMethod[]) => {
-    const statements = [];
+  private getStatementsForEffect = (
+    effect: string,
+    methods: ApiMethod[]
+  ): Array<any> => {
+    const statements: IStatement[] = [];
 
     if (methods.length > 0) {
       const statement = this.getEmptyStatement(effect);
 
       for (const curMethod of methods) {
-        if (curMethod.conditions === null || curMethod.conditions.length === 0) {
+        if (
+          curMethod.conditions === null ||
+          curMethod.conditions.length === 0
+        ) {
           statement.Resource.push(curMethod.resourceArn);
         } else {
           const conditionalStatement = this.getEmptyStatement(effect);
@@ -320,7 +364,7 @@ export class AuthPolicy {
     }
 
     return statements;
-  }
+  };
 }
 
 interface ApiMethod {
@@ -333,3 +377,21 @@ export interface ApiOptions {
   region?: string;
   stage?: string;
 }
+
+interface IStatement {
+  Action: string;
+  Effect: string;
+  Resource: string[];
+  Condition?: any;
+}
+
+type TAllowedVerbs =
+  | "*"
+  | "GET"
+  | "POST"
+  | "PUT"
+  | "PATCH"
+  | "HEAD"
+  | "DELETE"
+  | "OPTIONS"
+  | "ALL";
